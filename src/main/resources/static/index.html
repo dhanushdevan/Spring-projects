@@ -1,38 +1,87 @@
-<button id="pay-button">Pay Now</button>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Razorpay Integration</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <h2>Pay with Razorpay</h2>
+    <button id="pay-button">Pay Now</button>
 
-<script>
-    document.getElementById('pay-button').onclick = function () {
-        fetch('http://localhost:8081/payment/billPay', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                amount: 100,
-                currency: "INR",
-                recepitId: "txn_123456"
-            })
-        })
-        .then(response => response.json())
-        .then(order => {
-            const options = {
-                key: "rzp_test_Ypck42sDDhkdyk",
-                amount: order.amount,
-                currency: order.currency,
-                name: "Your Company",
-                description: "Test Transaction",
-                order_id: order.id,
-                handler: function (response) {
-                    alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
+    <script>
+        document.getElementById('pay-button').onclick = function () {
+            // Step 1: Call backend to create order
+            fetch('http://localhost:8081/payment/billPay', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
                 },
-                theme: {
-                    color: "#3399cc"
-                }
-            };
-            const rzp = new Razorpay(options);
-            rzp.open();
-        })
-        .catch(err => console.error(err));
-    };
-</script>
+                body: JSON.stringify({
+                    amount: 100,  // ₹1.00 in paise
+                    currency: "INR",
+                    recepitId: "txn_123456"
+                })
+            })
+            .then(response => response.json())
+            .then(order => {
+                // Step 2: Setup Razorpay payment options
+                const options = {
+                    key: "rzp_test_Ypck42sDDhkdyk", // 🔑 Your Razorpay key
+                    amount: order.amount,
+                    currency: order.currency,
+                    name: "Your Company",
+                    description: "Test Transaction",
+                    order_id: order.id,
+                    handler: function (response) {
+                        // Step 3: After successful payment
+                        const paymentId = response.razorpay_payment_id;
+                        const orderId = response.razorpay_order_id;
+                        const signature = response.razorpay_signature;
+
+                        console.log("Payment ID:", paymentId);
+                        console.log("Order ID:", orderId);
+                        console.log("Signature:", signature);
+
+                        // Step 4: Call backend to verify signature
+                        fetch('http://localhost:8081/payment/verify', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                razorpay_payment_id: paymentId,
+                                razorpay_order_id: orderId,
+                                razorpay_signature: signature
+                            })
+                        })
+                        .then(res => res.text())
+                        .then(data => {
+                            alert(data); // ✅ Success or ❌ Failure
+                        })
+                        .catch(err => {
+                            console.error('Verification failed:', err);
+                            alert('Verification failed.');
+                        });
+                    },
+                    prefill: {
+                        name: "Dhanush",
+                        email: "dhanush@example.com"
+                    },
+                    theme: {
+                        color: "#3399cc"
+                    }
+                };
+
+                // Step 5: Open Razorpay modal
+                const rzp1 = new Razorpay(options);
+                rzp1.open();
+            })
+            .catch(err => {
+                console.error("Order creation failed:", err);
+                alert("Something went wrong. Try again!");
+            });
+        };
+    </script>
+</body>
+</html>

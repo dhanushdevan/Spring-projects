@@ -36,7 +36,6 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
-    
         <dependency>
             <groupId>com.razorpay</groupId>
             <artifactId>razorpay-java</artifactId>
@@ -47,6 +46,18 @@
             <artifactId>employee</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+        <!-- Add to your pom.xml -->
+<dependency>
+    <groupId>jakarta.xml.bind</groupId>
+    <artifactId>jakarta.xml.bind-api</artifactId>
+   
+</dependency>
+
+<dependency>
+    <groupId>org.glassfish.jaxb</groupId>
+    <artifactId>jaxb-runtime</artifactId>
+</dependency>
+
     </dependencies>
 
     <build>
